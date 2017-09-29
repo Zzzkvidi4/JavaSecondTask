@@ -1,6 +1,14 @@
 package com.zzzkvidi4;
 
 public class User {
+    public User(){
+        this.id = 0;
+        this.name = "";
+        this.surname = "";
+        this.login = "";
+        this.email = "";
+    }
+
     public User(int id, String name, String surname, String login, String email){
         this.id = id;
         this.name = name;

@@ -1,10 +1,7 @@
 package com.zzzkvidi4;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class Main {
     /*
@@ -37,7 +34,12 @@ public class Main {
 	// write your code here
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/java", "root", "CaTaClYsM");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test?useSSL=false", "zzzkvidi4", "CaTaClYsM");
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT * FROM user");
+            while (rs.next()) {
+                System.out.println(rs.getInt("id_user") + " " + rs.getString("name") + " " + rs.getString("surname") + " " + rs.getString("login") + " " + rs.getString("email"));
+            }
         }
         catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
