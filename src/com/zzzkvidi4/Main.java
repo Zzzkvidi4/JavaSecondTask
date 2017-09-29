@@ -1,5 +1,11 @@
 package com.zzzkvidi4;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 public class Main {
     /*
 * "Написать программу (CLI, GUI) для работы с таблицей БД.
@@ -29,5 +35,12 @@ public class Main {
 */
     public static void main(String[] args) {
 	// write your code here
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/java", "root", "CaTaClYsM");
+        }
+        catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
