@@ -20,7 +20,11 @@ public class DeleteUsersCommand extends Command {
     public boolean isEnabled() {
         try (Statement statement = connection.createStatement()){
             ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS cnt FROM user;");
-            return ((rs.next()) && (rs.getInt("cnt") > 1));
+            int size = 0;
+            if (rs.next()) {
+                size = rs.getInt("cnt");
+            }
+            return size > 1;
         }
         catch (SQLException e) {
             return false;
@@ -56,10 +60,10 @@ public class DeleteUsersCommand extends Command {
                     }
                 }
                 catch (NumberFormatException e) {
-
+                    
                 }
             }
-            preparedStatement.executeUpdate();
+            preparedStatement.executeBatch();
             System.out.println("Успешно удалено " + count + " элементов из " + idsArray.length + ".");
         }
         catch (SQLException e) {
