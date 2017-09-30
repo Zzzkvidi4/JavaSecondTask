@@ -22,8 +22,8 @@ public class Main {
 - удалить конкретную запись +
 - удалить несколько записей
 - добавить нового пользователя в список +
-- отфильтровать список пользователей на основе заданного критерия
-- отсортировать список пользователей на основе заданного критерия
+- отфильтровать список пользователей на основе заданного критерия +
+- отсортировать список пользователей на основе заданного критерия +
 - импорт/экспорт данных из/в CSV, [JSON, XML] (имя файла задается пользователем)
 
 Необходимо разделить приложение на модули:
@@ -35,20 +35,19 @@ public class Main {
 
     public static void main(String[] args) {
 	// write your code here
-        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test?useSSL=false", "zzzkvidi4", "CaTaClYsM");
-            Statement statement = connection.createStatement()){
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test?useSSL=false", "zzzkvidi4", "CaTaClYsM")){
             Class.forName("com.mysql.jdbc.Driver");
-            ResultSet rs = statement.executeQuery("SELECT * FROM user");
-            while (rs.next()) {
-                System.out.println(rs.getInt("id_user") + " " + rs.getString("name") + " " + rs.getString("surname") + " " + rs.getString("login") + " " + rs.getString("email"));
-            }
 
             CommandList commands = new CommandList();
             commands.addCommand(new AddUserCommand("Добавить пользователя.", connection));
             commands.addCommand(new DeleteUserCommand("Удалить пользователя.", connection));
+            commands.addCommand(new DeleteUsersCommand("Удалить пользователей", connection));
             commands.addCommand(new PrintUsersCommand("Вывести пользователей.", connection));
             commands.addCommand(new EditUserCommand("Редактировать пользователя.", connection));
-            commands.addCommand(new SortCommand("Отсортировать пользователей.", connection));
+            commands.addCommand(new SortCommand("Отсортировать пользователей по логину.", connection));
+            commands.addCommand(new FilterUserCommand("Отфильтровать пользователей по id.", connection));
+            commands.addCommand(new ImportToCSVCommand("Импортировать в csv формат.", connection));
+            commands.addCommand(new ExportFromCSVCommand("Экспорт из csv формата.", connection));
             commands.addCommand(new ExitCommand("Выход."));
             HelpUtils.runCommandList("Меню:", commands);
         }

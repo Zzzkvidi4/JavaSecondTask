@@ -56,18 +56,21 @@ public class EditUserCommand extends Command {
             int cmdIndex;
             int size = commands.actualSize();
             do {
+                System.out.println(user);
+                commands.printCommandTitles("Меню редактирования:");
                 cmdIndex = HelpUtils.getValueCLIWithoutAbort(
                         "--> ",
                         new IntegerBetweenBoundariesValidator("Число должно быть между 1 и " + size + "!", 1, size)
                 );
                 commands.executeCommand(cmdIndex - 1);
-            } while (cmdIndex == size);
+            } while (cmdIndex != size);
 
             preparedStatement.setInt(1, user.getId());
             preparedStatement.setString(2, user.getName());
             preparedStatement.setString(3, user.getSurname());
             preparedStatement.setString(4, user.getLogin());
             preparedStatement.setString(5, user.getEmail());
+            preparedStatement.executeUpdate();
         }
         catch (SQLException e) {
             System.out.println("Ошибка соединения с базой данных!");
