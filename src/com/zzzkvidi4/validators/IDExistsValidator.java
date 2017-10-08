@@ -8,8 +8,8 @@ import java.util.List;
 public class IDExistsValidator extends BasicValidator<Integer> {
     private List<Integer> ids;
 
-    public IDExistsValidator(String validationFailsMsg, Integer initialValue, ResultSet rs) throws SQLException {
-        super(validationFailsMsg, initialValue);
+    public IDExistsValidator(String validationFailsMsg, ResultSet rs) throws SQLException {
+        super(validationFailsMsg);
         ids = new ArrayList<>();
         while (rs.next()) {
             ids.add(rs.getInt(1));
@@ -19,10 +19,5 @@ public class IDExistsValidator extends BasicValidator<Integer> {
     @Override
     public boolean validate(Integer value) {
         return ids.contains(value);
-    }
-
-    @Override
-    public Integer cast(String value) {
-        return Integer.valueOf(value);
     }
 }

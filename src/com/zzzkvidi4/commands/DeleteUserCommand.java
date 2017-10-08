@@ -2,16 +2,23 @@ package com.zzzkvidi4.commands;
 
 import com.zzzkvidi4.HelpUtils;
 import com.zzzkvidi4.exceptions.AbortOperationException;
+import com.zzzkvidi4.exceptions.NotInitializedException;
 import com.zzzkvidi4.validators.IDExistsValidator;
 
 import java.sql.*;
 
 public class DeleteUserCommand extends Command {
     private Connection connection;
+    private int id;
 
     public DeleteUserCommand(String title, Connection connection) {
         super(title);
         this.connection = connection;
+    }
+
+    public void initialize(int id) {
+        this.id = id;
+        isInitialized = true;
     }
 
     @Override
@@ -26,24 +33,13 @@ public class DeleteUserCommand extends Command {
     }
 
     @Override
-    public void execute() {
-        try (
-                Statement statement = connection.createStatement();
-                PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user WHERE id_user=?;")
-        ){
-            ResultSet rs = statement.executeQuery("SELECT DISTINCT id_user FROM user;");
-            int id = HelpUtils.getValueCLI(
-                    "Введите id пользователя для удаления: ",
-                    "abort",
-                    new IDExistsValidator("Пользователь с таким id не существует!", -1, rs)
-            );
-            preparedStatement.setInt(1, id);
-            preparedStatement.executeUpdate();
+    public void execute() throws NotInitializedException, SQLException {
+        if (!isInitialized) {
+            throw new NotInitializedException("Id не инициализирован!");
         }
-        catch (AbortOperationException e) {
-            System.out.println(e.getMessage());
-        } catch (SQLException e) {
-            System.out.println("Ошибка соединения с базой данных!");
-        }
+        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user WHERE id_user=?;");
+        preparedStatement.setInt(1, id);
+        preparedStatement.executeUpdate();
+
     }
 }

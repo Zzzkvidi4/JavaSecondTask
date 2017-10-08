@@ -11,8 +11,8 @@ import java.util.List;
 public class IDNotExistsValidator extends BasicValidator<Integer> {
     private List<Integer> ids;
 
-    public IDNotExistsValidator(String validationFailsMsg, Integer initialValue, ResultSet rs) throws SQLException {
-        super(validationFailsMsg, initialValue);
+    public IDNotExistsValidator(String validationFailsMsg, ResultSet rs) throws SQLException {
+        super(validationFailsMsg);
         ids = new ArrayList<>();
         while (rs.next()) {
             ids.add(rs.getInt(1));
@@ -22,10 +22,5 @@ public class IDNotExistsValidator extends BasicValidator<Integer> {
     @Override
     public boolean validate(Integer value) {
         return !(ids.contains(value));
-    }
-
-    @Override
-    public Integer cast(String value) {
-        return Integer.valueOf(value);
     }
 }

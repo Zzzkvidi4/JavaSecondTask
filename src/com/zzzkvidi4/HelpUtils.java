@@ -1,4 +1,6 @@
 package com.zzzkvidi4;
+import com.zzzkvidi4.casters.Caster;
+import com.zzzkvidi4.casters.IntegerCaster;
 import com.zzzkvidi4.commands.CommandList;
 import com.zzzkvidi4.exceptions.AbortOperationException;
 import com.zzzkvidi4.validators.BasicValidator;
@@ -10,7 +12,9 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class HelpUtils {
     public static User rowToUser(ResultSet rs) throws  SQLException{
@@ -23,11 +27,11 @@ public class HelpUtils {
         return user;
     }
 
-    public static <T> T getValueCLI(String title, String abortString, BasicValidator<T> validator) throws AbortOperationException{
+    public static <T> T getValueCLI(String title, String abortString, ArrayList<BasicValidator<T>> validators, T initialValue, Caster<T> caster) throws AbortOperationException{
         String buf;
         boolean isInputCorrect = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        T value = validator.initialValue();
+        T value = initialValue;
         while (!isInputCorrect){
             System.out.print(title);
             try {
@@ -35,11 +39,9 @@ public class HelpUtils {
                 if (buf.equals(abortString)){
                     throw new AbortOperationException("Отмена операции...");
                 }
-                value = validator.cast(buf);
-                isInputCorrect = validator.validate(value);
-                if (!isInputCorrect) {
-                    System.out.println(validator.message());
-                }
+                value = caster.cast(buf);
+                isInputCorrect = true;
+                isInputCorrect = CheckValidatorsCLI(validators, value);
             }
             catch(IOException e){
                 System.out.println("Внимание, произошла ошибка ввода!");
@@ -51,20 +53,29 @@ public class HelpUtils {
         return value;
     }
 
-    public static <T> T getValueCLIWithoutAbort(String title, BasicValidator<T> validator) {
+    private static <T> boolean CheckValidatorsCLI(ArrayList<BasicValidator<T>> validators, T value) {
+        boolean isInputCorrect = true;
+        for(BasicValidator<T> validator : validators) {
+            boolean tmpFlag = validator.validate(value);
+            if (!tmpFlag) {
+                System.out.println(validator.message());
+            }
+            isInputCorrect = isInputCorrect && tmpFlag;
+        }
+        return isInputCorrect;
+    }
+
+    public static <T> T getValueCLIWithoutAbort(String title, ArrayList<BasicValidator<T>> validators, T initialValue, Caster<T> caster) {
         String buf;
         boolean isInputCorrect = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        T value = validator.initialValue();
+        T value = initialValue;
         while (!isInputCorrect){
             System.out.print(title);
             try {
                 buf = reader.readLine();
-                value = validator.cast(buf);
-                isInputCorrect = validator.validate(value);
-                if (!isInputCorrect) {
-                    System.out.println(validator.message());
-                }
+                value = caster.cast(buf);
+                isInputCorrect = CheckValidatorsCLI(validators, value);
             }
             catch(IOException e){
                 System.out.println("Внимание, произошла ошибка ввода!");
@@ -83,9 +94,9 @@ public class HelpUtils {
         do {
             cmdList.printCommandTitles(commonTitle);
             actualSize = cmdList.actualSize();
-            cmdNumber = HelpUtils.getValueCLIWithoutAbort(
-                    "--> ",
-                    new IntegerBetweenBoundariesValidator("число должно быть между 1 и " + actualSize + "!", 1, actualSize));
+            ArrayList<BasicValidator<Integer>> validators = new ArrayList<>();
+            validators.add(new IntegerBetweenBoundariesValidator("Число должно быть между 1 и " + actualSize + "!", 1, actualSize));
+            cmdNumber = HelpUtils.getValueCLIWithoutAbort("--> ", validators, -1, new IntegerCaster());
             cmdList.executeCommand(cmdNumber - 1);
         } while (cmdNumber != actualSize);
     }
