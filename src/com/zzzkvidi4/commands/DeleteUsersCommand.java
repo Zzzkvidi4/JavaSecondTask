@@ -1,8 +1,6 @@
 package com.zzzkvidi4.commands;
 
-import com.zzzkvidi4.HelpUtils;
-import com.zzzkvidi4.exceptions.AbortOperationException;
-import com.zzzkvidi4.validators.StringNotEmptyValidator;
+import com.zzzkvidi4.exceptions.NotInitializedException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,10 +8,12 @@ import java.util.List;
 
 public class DeleteUsersCommand extends Command {
     private Connection connection;
+    private ArrayList<Integer> ids;
 
     public DeleteUsersCommand(String title, Connection connection) {
         super(title);
         this.connection = connection;
+        ids = new ArrayList<>();
     }
 
     @Override
@@ -32,45 +32,29 @@ public class DeleteUsersCommand extends Command {
     }
 
     @Override
-    public void execute() {
-        try (
-                Statement statement = connection.createStatement();
-                PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user WHERE id_user=?;")
-        ){
-            ResultSet rs = statement.executeQuery("SELECT DISTINCT id_user FROM user;");
-            List<Integer> ids = new ArrayList<>();
-            while (rs.next()) {
-                ids.add(rs.getInt("id_user"));
+    public void initialize(List<Object> args){
+        for(Object obj: args){
+            if (obj instanceof Integer) {
+                ids.add((Integer) obj);
             }
-            String stringIds = HelpUtils.getValueCLI(
-                    "Введите строку id, разделенных пробелами: ",
-                    "abort",
-                    new StringNotEmptyValidator("Строка не должна быть пустой!")
-            );
-            String[] idsArray = stringIds.replaceAll("[^0-9 ]", " ").trim().split("[ ]+");
-            int count = 0;
-            for (String id: idsArray){
-                try {
-                    Integer intId = Integer.parseInt(id);
-                    if (ids.contains(intId)) {
-                        ++count;
-                        preparedStatement.setInt(1, intId);
-                        ids.remove(intId);
-                        preparedStatement.addBatch();
-                    }
-                }
-                catch (NumberFormatException e) {
-                    
-                }
+        }
+        isInitialized = ids.size() != 0;
+    }
+
+    @Override
+    public void execute() throws NotInitializedException, SQLException {
+        if (!isInitialized) {
+            throw new NotInitializedException("Ни одного id для удаления не было добавлено!");
+        } else {
+            isInitialized = false;
+        }
+        try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user WHERE id_user=?;")) {
+            for (Integer id : ids) {
+                preparedStatement.setInt(1, id);
+                ids.remove(id);
+                preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
-            System.out.println("Успешно удалено " + count + " элементов из " + idsArray.length + ".");
-        }
-        catch (SQLException e) {
-            System.out.println("Ошибка соединения с базой данных!");
-        }
-        catch (AbortOperationException e) {
-            System.out.println(e.getMessage());
         }
     }
 }

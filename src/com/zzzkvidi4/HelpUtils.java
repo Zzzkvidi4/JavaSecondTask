@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class HelpUtils {
         return user;
     }
 
-    public static <T> T getValueCLI(String title, String abortString, ArrayList<BasicValidator<T>> validators, T initialValue, Caster<T> caster) throws AbortOperationException{
+    public static <T> T getValueCLI(String title, String abortString, List<BasicValidator<T>> validators, T initialValue, Caster<T> caster) throws AbortOperationException{
         String buf;
         boolean isInputCorrect = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -53,7 +54,7 @@ public class HelpUtils {
         return value;
     }
 
-    private static <T> boolean CheckValidatorsCLI(ArrayList<BasicValidator<T>> validators, T value) {
+    private static <T> boolean CheckValidatorsCLI(List<BasicValidator<T>> validators, T value) {
         boolean isInputCorrect = true;
         for(BasicValidator<T> validator : validators) {
             boolean tmpFlag = validator.validate(value);
@@ -65,7 +66,7 @@ public class HelpUtils {
         return isInputCorrect;
     }
 
-    public static <T> T getValueCLIWithoutAbort(String title, ArrayList<BasicValidator<T>> validators, T initialValue, Caster<T> caster) {
+    public static <T> T getValueCLIWithoutAbort(String title, List<BasicValidator<T>> validators, T initialValue, Caster<T> caster) {
         String buf;
         boolean isInputCorrect = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -87,17 +88,13 @@ public class HelpUtils {
         return value;
     }
 
-
-    public static void runCommandList(String commonTitle, CommandList cmdList) {
-        int cmdNumber;
-        int actualSize;
-        do {
-            cmdList.printCommandTitles(commonTitle);
-            actualSize = cmdList.actualSize();
-            ArrayList<BasicValidator<Integer>> validators = new ArrayList<>();
-            validators.add(new IntegerBetweenBoundariesValidator("Число должно быть между 1 и " + actualSize + "!", 1, actualSize));
-            cmdNumber = HelpUtils.getValueCLIWithoutAbort("--> ", validators, -1, new IntegerCaster());
-            cmdList.executeCommand(cmdNumber - 1);
-        } while (cmdNumber != actualSize);
+    public static int getNotExistingId(List<Integer> ids) {
+        ids.sort(new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1.compareTo(o2);
+            }
+        });
+        return ids.get(ids.size() - 1) + 1;
     }
 }

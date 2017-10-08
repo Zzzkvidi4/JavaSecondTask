@@ -1,15 +1,9 @@
 package com.zzzkvidi4.commands;
 
-import com.zzzkvidi4.HelpUtils;
 import com.zzzkvidi4.User;
-import com.zzzkvidi4.casters.IntegerCaster;
-import com.zzzkvidi4.casters.StringCaster;
-import com.zzzkvidi4.exceptions.AbortOperationException;
 import com.zzzkvidi4.exceptions.NotInitializedException;
-import com.zzzkvidi4.validators.*;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AddUserCommand extends Command {
@@ -21,15 +15,22 @@ public class AddUserCommand extends Command {
         this.connection = connection;
     }
 
-    public void initialize(User user){
-        this.user = user;
-        isInitialized = true;
+    @Override
+    public void initialize(List<Object> args) {
+        for(Object obj: args) {
+            if (obj instanceof User) {
+                this.user = (User) obj;
+                isInitialized = true;
+            }
+        }
     }
 
     @Override
     public void execute() throws NotInitializedException, SQLException {
         if (!isInitialized) {
             throw new NotInitializedException("Пользователь не установлен!");
+        } else {
+            isInitialized = false;
         }
         try (
                 PreparedStatement preparedStatement = connection.prepareStatement(

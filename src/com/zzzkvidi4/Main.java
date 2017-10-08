@@ -2,7 +2,6 @@ package com.zzzkvidi4;
 
 import com.zzzkvidi4.commands.*;
 
-import java.io.IOException;
 import java.sql.*;
 
 public class Main {
@@ -46,8 +45,8 @@ public class Main {
             commands.addCommand(new EditUserCommand("Редактировать пользователя.", connection));
             commands.addCommand(new SortCommand("Отсортировать пользователей по логину.", connection));
             commands.addCommand(new FilterUserCommand("Отфильтровать пользователей по id.", connection));
-            commands.addCommand(new ImportToCSVCommand("Импортировать в csv формат.", connection));
-            commands.addCommand(new ExportFromCSVCommand("Экспорт из csv формата.", connection));
+            commands.addCommand(new ImportFromCSVCommand("Импортировать в csv формат.", connection));
+            commands.addCommand(new ExportToCSVCommand("Экспорт из csv формата.", connection));
             commands.addCommand(new ExitCommand("Выход."));
             HelpUtils.runCommandList("Меню:", commands);
         }

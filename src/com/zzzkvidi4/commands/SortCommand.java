@@ -3,7 +3,9 @@ package com.zzzkvidi4.commands;
 import com.zzzkvidi4.HelpUtils;
 import com.zzzkvidi4.User;
 import com.zzzkvidi4.comparators.LoginComparator;
+import com.zzzkvidi4.exceptions.NotInitializedException;
 
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,6 +15,7 @@ import java.util.List;
 
 public class SortCommand extends Command {
     private Connection connection;
+    private PrintStream out;
 
     public SortCommand(String title, Connection connection) {
         super(title);
@@ -31,7 +34,22 @@ public class SortCommand extends Command {
     }
 
     @Override
-    public void execute() {
+    public void initialize(List<Object> args) {
+        for(Object obj: args) {
+            if (obj instanceof PrintStream) {
+                out = (PrintStream) obj;
+                isInitialized = true;
+            }
+        }
+    }
+
+    @Override
+    public void execute() throws NotInitializedException, SQLException {
+        if (!isInitialized) {
+            throw new NotInitializedException("Выходной поток не установлен!");
+        } else {
+            isInitialized = false;
+        }
         try (Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery("SELECT * FROM user;");
             List<User> userList = new ArrayList<>();
@@ -39,14 +57,11 @@ public class SortCommand extends Command {
                 userList.add(HelpUtils.rowToUser(rs));
             }
             userList.sort(new LoginComparator());
-            System.out.println();
-            for(User user: userList) {
-                System.out.println(user);
+            out.println();
+            for (User user : userList) {
+                out.println(user);
             }
-            System.out.println();
-        }
-        catch (SQLException e) {
-            System.out.println("Ошибка соединения с базой данных!");
+            out.println();
         }
     }
 }

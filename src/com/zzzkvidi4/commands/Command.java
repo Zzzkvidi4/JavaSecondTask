@@ -2,7 +2,9 @@ package com.zzzkvidi4.commands;
 
 import com.zzzkvidi4.exceptions.NotInitializedException;
 
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 public abstract class Command {
     public Command(String title){
@@ -17,7 +19,9 @@ public abstract class Command {
         return title;
     }
 
-    public abstract void execute() throws NotInitializedException, SQLException;
+    public abstract void initialize(List<Object> args);
+
+    public abstract void execute() throws NotInitializedException, SQLException, IOException;
 
     public boolean isEnabled() {
         return true;
