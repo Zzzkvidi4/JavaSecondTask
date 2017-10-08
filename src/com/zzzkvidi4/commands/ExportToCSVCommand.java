@@ -29,7 +29,7 @@ public class ExportToCSVCommand extends Command {
                 fileName = (String)obj;
             }
         }
-        isInitialized = fileName.equals("");
+        isInitialized = !fileName.equals("");
     }
 
     @Override

@@ -193,11 +193,11 @@ class CLIUI {
     private CommandList initializeCommandList(){
         CommandList commands = new CommandList();
         commands.addCommand(new AddUserCommand("Добавить пользователя.", connection));
-        commands.addCommand(new ExportToCSVCommand("Импортировать из csv формата.", connection));
+        commands.addCommand(new ExportToCSVCommand("Экспорт в csv формат.", connection));
         commands.addCommand(new DeleteUserCommand("Удалить пользователя.", connection));
         commands.addCommand(new PrintUsersCommand("Вывести пользователей.", connection));
         commands.addCommand(new EditUserCommand("Редактировать пользователя.", connection));
-        commands.addCommand(new ImportFromCSVCommand("Экспорт в csv формат.", connection));
+        commands.addCommand(new ImportFromCSVCommand("Импорт из csv формата.", connection));
         commands.addCommand(new SortCommand("Отсортировать пользователей по логину.", connection));
         commands.addCommand(new FilterUserCommand("Отфильтровать пользователей по id.", connection));
         commands.addCommand(new DeleteUsersCommand("Удалить пользователей", connection));

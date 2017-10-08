@@ -40,7 +40,7 @@ public class ImportFromCSVCommand extends Command {
                 fileName = (String)obj;
             }
         }
-        isInitialized = fileName.equals("");
+        isInitialized = !fileName.equals("");
     }
 
     @Override

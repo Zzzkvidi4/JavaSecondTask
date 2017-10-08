@@ -48,11 +48,21 @@ public class DeleteUsersCommand extends Command {
         } else {
             isInitialized = false;
         }
-        try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user WHERE id_user=?;")) {
+        try (
+                PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user WHERE id_user=?;");
+                Statement statement = connection.createStatement()
+        ) {
+            ResultSet rs = statement.executeQuery("SELECT DISTINCT id_user FROM user;");
+            List<Integer> existingIds = new ArrayList<>();
+            while (rs.next()) {
+                existingIds.add(rs.getInt("id_user"));
+            }
             for (Integer id : ids) {
-                preparedStatement.setInt(1, id);
-                ids.remove(id);
-                preparedStatement.addBatch();
+                if (existingIds.contains(id)) {
+                    preparedStatement.setInt(1, id);
+                    preparedStatement.addBatch();
+                    existingIds.remove(id);
+                }
             }
             preparedStatement.executeBatch();
         }
