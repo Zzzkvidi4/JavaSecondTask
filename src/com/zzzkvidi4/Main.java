@@ -37,18 +37,8 @@ public class Main {
         try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test?useSSL=false", "zzzkvidi4", "CaTaClYsM")){
             Class.forName("com.mysql.jdbc.Driver");
 
-            CommandList commands = new CommandList();
-            commands.addCommand(new AddUserCommand("Добавить пользователя.", connection));
-            commands.addCommand(new DeleteUserCommand("Удалить пользователя.", connection));
-            commands.addCommand(new DeleteUsersCommand("Удалить пользователей", connection));
-            commands.addCommand(new PrintUsersCommand("Вывести пользователей.", connection));
-            commands.addCommand(new EditUserCommand("Редактировать пользователя.", connection));
-            commands.addCommand(new SortCommand("Отсортировать пользователей по логину.", connection));
-            commands.addCommand(new FilterUserCommand("Отфильтровать пользователей по id.", connection));
-            commands.addCommand(new ImportFromCSVCommand("Импортировать в csv формат.", connection));
-            commands.addCommand(new ExportToCSVCommand("Экспорт из csv формата.", connection));
-            commands.addCommand(new ExitCommand("Выход."));
-            HelpUtils.runCommandList("Меню:", commands);
+            CLIUI cli = new CLIUI(connection);
+            cli.start();
         }
         catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();

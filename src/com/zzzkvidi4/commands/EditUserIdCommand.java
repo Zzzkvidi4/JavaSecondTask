@@ -42,7 +42,6 @@ public class EditUserIdCommand extends Command {
         }
         try (Statement statement = connection.createStatement()){
             ResultSet rs = statement.executeQuery("SELECT DISTINCT id_user FROM user;");
-            System.out.println("Текущее значение id: " + user.getId());
             if (!(new IDNotExistsValidator("Пользователь с таким id уже существует!", rs).validate(id))){
                 isInitialized = false;
                 throw new IllegalArgumentException("Пользователь с таким id уже существует!");

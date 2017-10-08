@@ -2,6 +2,7 @@ package com.zzzkvidi4.commands;
 
 import com.zzzkvidi4.exceptions.NotInitializedException;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -32,7 +33,7 @@ public class CommandList {
         return size;
     }
 
-    public void executeCommand(int index) throws NotInitializedException, SQLException {
+    public void executeCommand(int index) throws NotInitializedException, SQLException, IOException {
         getCommand(index).execute();
     }
 

@@ -19,38 +19,55 @@ import java.util.List;
 /**
  * Created by Роман on 07.10.2017.
  */
-public class CLIUI {
+class CLIUI {
     private Connection connection;
 
-    public CLIUI(Connection connection) {
+    CLIUI(Connection connection) {
         this.connection = connection;
     }
 
     private User inputUser() throws AbortOperationException, SQLException {
         User user = new User();
-        ArrayList<BasicValidator<String>> emailValidators = new ArrayList<>();
-        emailValidators.add(new StringNotEmptyValidator("Email не должен быть пустым!"));
-        emailValidators.add(new PatternValidator("Email введен некорректно!", "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])"));
         user.setId(inputNotExistingId());
-        user.setName(inputNotEmptyString(
+        user.setName(inputUserName());
+        user.setSurname(inputUserSurname());
+        user.setEmail(inputEmail());
+        user.setLogin(inputUserLogin());
+        return user;
+    }
+
+    private User getUserFromDB(int id) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            ResultSet rs = statement.executeQuery("SELECT * FROM user WHERE id_user=" + id + ";");
+            if (rs.next()) {
+                return HelpUtils.rowToUser(rs);
+            }
+        }
+        return null;
+    }
+
+    private String inputUserName() throws AbortOperationException {
+        return inputNotEmptyString(
                 "Имя пользователя не должно быть пустым!",
                 "Введите имя пользователя: ",
                 "abort"
-        ));
-        user.setSurname(inputNotEmptyString(
+        );
+    }
+
+    private String inputUserSurname() throws AbortOperationException {
+        return inputNotEmptyString(
                 "Фамилия пользователя не должна быть пустой!",
                 "Введите фамилию пользователя: ",
                 "abort"
-        ));
+        );
+    }
 
-        user.setEmail(inputEmail());
-
-        user.setLogin(inputNotEmptyString(
+    private String inputUserLogin() throws AbortOperationException {
+        return inputNotEmptyString(
                 "Логин пользователя не должен быть пустым!",
                 "Введите логин пользователя: ",
                 "abort"
-        ));
-        return user;
+        );
     }
 
     private int inputExistingId() throws AbortOperationException, SQLException {
@@ -59,7 +76,7 @@ public class CLIUI {
             ArrayList<BasicValidator<Integer>> idExistsValidators = new ArrayList<>();
             idExistsValidators.add(new IDExistsValidator("Пользователь с таким id не существует!", rs));
             return HelpUtils.getValueCLI(
-                    "Введите id пользователя для удаления: ",
+                    "Введите id пользователя: ",
                     "abort",
                     idExistsValidators,
                     -1,
@@ -118,10 +135,10 @@ public class CLIUI {
         try (Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery("SELECT DISTINCT id_user FROM user;");
             List<BasicValidator<Integer>> IDExistsValidators = new ArrayList<>();
-            IDExistsValidators.add(new IDExistsValidator("Пользователь с таким id не существует!", rs));
+            IDExistsValidators.add(new IDNotExistsValidator("Пользователь с таким id существует!", rs));
             IDExistsValidators.add(new IntegerGreaterZeroValidator("Id должен быть больше нуля!"));
             return HelpUtils.getValueCLI(
-                    "Введите id пользователя для редактирования: ",
+                    "Введите id пользователя: ",
                     "abort",
                     IDExistsValidators,
                     -1,
@@ -173,8 +190,7 @@ public class CLIUI {
         );
     }
 
-    public void start() {
-        int cmdNumber = -1;
+    private CommandList initializeCommandList(){
         CommandList commands = new CommandList();
         commands.addCommand(new AddUserCommand("Добавить пользователя.", connection));
         commands.addCommand(new ExportToCSVCommand("Импортировать из csv формата.", connection));
@@ -186,6 +202,59 @@ public class CLIUI {
         commands.addCommand(new FilterUserCommand("Отфильтровать пользователей по id.", connection));
         commands.addCommand(new DeleteUsersCommand("Удалить пользователей", connection));
         commands.addCommand(new ExitCommand("Выход."));
+        return commands;
+    }
+
+    private void specifyCommandsArgs(Command cmd, List<Object> args) throws AbortOperationException, SQLException, IllegalArgumentException {
+        if (cmd instanceof AddUserCommand) {
+            args.add(inputUser());
+        } else if (cmd instanceof DeleteUserCommand) {
+            args.add(inputExistingId());
+        } else if (cmd instanceof DeleteUsersCommand) {
+            args.addAll(inputExistingIds());
+        } else if ((cmd instanceof ExportToCSVCommand) || (cmd instanceof ImportFromCSVCommand)) {
+            args.add(inputCSVFileName());
+        } else if ((cmd instanceof PrintUsersCommand) || (cmd instanceof SortCommand) || (cmd instanceof FilterUserCommand)) {
+            args.add(System.out);
+            if (cmd instanceof FilterUserCommand) {
+                args.add(inputIdToFilter());
+            }
+        }
+    }
+
+    private CommandList initializeEditionCommandList(User user) {
+        CommandList editionCommands = new CommandList();
+        editionCommands.addCommand(new EditUserIdCommand("Изменить id пользователя.", user, connection));
+        editionCommands.addCommand(new EditUserNameCommand("Изменить имя пользователя.", user));
+        editionCommands.addCommand(new EditUserSurnameCommand("Изменить фамилию пользователя.", user));
+        editionCommands.addCommand(new EditUserLoginCommand("Изменить логин пользователя.", user));
+        editionCommands.addCommand(new EditUserEmailCommand("Изменить email пользователя.", user));
+        editionCommands.addCommand(new ExitCommand("Назад."));
+        return editionCommands;
+    }
+
+    private void specifyEditionCommandsArgs(Command editionCmd, List<Object> editionArgs, User user) throws AbortOperationException, SQLException, IllegalArgumentException{
+        if (editionCmd instanceof EditUserIdCommand) {
+            System.out.println("Текущее значение id: " + user.getId());
+            editionArgs.add(inputNotExistingId());
+        } else if (editionCmd instanceof EditUserNameCommand) {
+            System.out.println("Текущее имя: " + user.getName());
+            editionArgs.add(inputUserName());
+        } else if (editionCmd instanceof EditUserSurnameCommand) {
+            System.out.println("Текущая фамилия: " + user.getSurname());
+            editionArgs.add(inputUserSurname());
+        } else if (editionCmd instanceof EditUserLoginCommand) {
+            System.out.println("Текущий логин: " + user.getLogin());
+            editionArgs.add(inputUserLogin());
+        } else if (editionCmd instanceof EditUserEmailCommand) {
+            System.out.println("Текущий email: " + user.getEmail());
+            editionArgs.add(inputEmail());
+        }
+    }
+
+    void start() {
+        int cmdNumber = -1;
+        CommandList commands = initializeCommandList();
         int actualSize = commands.actualSize();
         while (cmdNumber != actualSize) {
             commands.printCommandTitles("Меню:");
@@ -195,18 +264,37 @@ public class CLIUI {
             Command cmd = commands.getCommand(cmdNumber - 1);
             List<Object> args = new ArrayList<>();
             try {
-                if (cmd instanceof AddUserCommand) {
-                    args.add(inputUser());
-                } else if (cmd instanceof DeleteUserCommand) {
-                    args.add(inputExistingId());
-                } else if (cmd instanceof DeleteUsersCommand) {
-                    args.addAll(inputExistingIds());
-                } else if ((cmd instanceof ExportToCSVCommand) || (cmd instanceof ImportFromCSVCommand)) {
-                    args.add(inputCSVFileName());
-                } else if ((cmd instanceof PrintUsersCommand) || (cmd instanceof SortCommand) || (cmd instanceof FilterUserCommand)) {
-                    args.add(System.out);
-                    if (cmd instanceof FilterUserCommand) {
-                        args.add(inputIdToFilter());
+                if (!(cmd instanceof EditUserCommand)) {
+                    specifyCommandsArgs(cmd, args);
+                } else {
+                    int id = inputExistingId();
+                    User user = getUserFromDB(id);
+                    if (user != null) {
+                        CommandList editionCommands = initializeEditionCommandList(user);
+                        int editionCommandsSize = editionCommands.actualSize();
+                        int editionCmdNumber = -1;
+                        while (editionCmdNumber != editionCommandsSize) {
+                            System.out.println(user);
+                            editionCommands.printCommandTitles("Меню редактирования: ");
+                            List<BasicValidator<Integer>> cmdsValidator = new ArrayList<>();
+                            cmdsValidator.add(new IntegerBetweenBoundariesValidator("Число должно быть между 1 и " + editionCommandsSize + "!", 1, editionCommandsSize));
+                            editionCmdNumber = HelpUtils.getValueCLIWithoutAbort("--> ", cmdsValidator, -1, new IntegerCaster());
+                            Command editionCmd = editionCommands.getCommand(editionCmdNumber - 1);
+                            List<Object> editionArgs = new ArrayList<>();
+                            try {
+                                specifyEditionCommandsArgs(editionCmd, editionArgs, user);
+                                editionCmd.initialize(editionArgs);
+                                editionCmd.execute();
+                            }
+                            catch(NotInitializedException|IllegalArgumentException|AbortOperationException e) {
+                                System.out.println(e.getMessage());
+                            }
+                            catch (SQLException e) {
+                                System.out.println("Ошибка соединения с базой данных!");
+                            }
+                        }
+                        args.add(id);
+                        args.add(user);
                     }
                 }
                 cmd.initialize(args);
